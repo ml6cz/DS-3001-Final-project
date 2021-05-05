@@ -1,0 +1,31 @@
+---
+title: "Top N%"
+author: "Megan Lin, James Powell, Eva Mustafic"
+date: "5/5/2021"
+output: 
+  html_document:
+    toc: true
+    toc_float : true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, message = FALSE)
+library(class)
+library(caret)
+library(e1071) 
+library(tidytext)
+library(dplyr)
+library(readr)
+library(knitr)
+library(ggplot2)
+library(tidyverse)
+```
+
+## R Markdown
+
+```{r}
+data <- read.csv("SEAS_cleandata.csv")
+data %>% filter("Salary" != "NA") %>% 
+  filter("Gender" != "NA") %>%
+  filter("Gender" != "?")
+```
