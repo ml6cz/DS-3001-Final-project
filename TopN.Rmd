@@ -25,7 +25,5 @@ library(tidyverse)
 
 ```{r}
 data <- read.csv("SEAS_cleandata.csv")
-data %>% filter("Salary" != "NA") %>% 
-  filter("Gender" != "NA") %>%
-  filter("Gender" != "?")
+data <- subset(data, Gender %in% c("F", "M"))
 ```
