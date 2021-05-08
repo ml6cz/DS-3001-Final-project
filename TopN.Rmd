@@ -21,9 +21,111 @@ library(ggplot2)
 library(tidyverse)
 ```
 
-## R Markdown
+## Reading in the Data
+
+The data has previously been merged and cleaned using Python, but we are going to make sure all of the rows with incomplete data are filtered out. Specifically, we will be filtering out employees with a gender the Python program was unable to find in any existing gender-name dictionaries or was deemed to be a gender-neutral name like Alex.
 
 ```{r}
 data <- read.csv("SEAS_cleandata.csv")
 data <- subset(data, Gender %in% c("F", "M"))
+```
+
+## Split the Data
+To determine the split, we had to determine the ratio of female to total, and based on that, we can deduce the percent of male entries, and the percentage of both. To do this we created the function ad_split, which prints the ratio of female to total entries and ran it on the clean salary dataset. The split between female to male is 22 percent to 78 percent within the School of Engineering, respectively.
+
+```{r echo=FALSE, include = FALSE, message = FALSE}
+# Determine the split between female and male, then calculate the base rate
+ad_split <- function(dat){
+  female <- filter(dat, Gender == 'F')
+  n_comm <- nrow(female)
+  n_noncomm <- nrow(dat) - nrow(female)
+  n_total <- nrow(dat)
+  n_comm/n_total
+}
+ad_split(data)
+#There is a 22/78 split
+```
+
+## Choose the Data
+
+To filter out the vars, we create a list of the vars names and saved the dataset over itself without the columns in the vars variable. 
+```{r echo=FALSE, message = FALSE}
+# We drop all columns that do not contain relevant data
+vars <- c('Department', 'Position', 'Tenure', 'Gender', 'Salary')
+data_clean <- data[,(names(data) %in% vars)]
+data_clean$Department <- as.numeric(as.factor(data_clean$Department))
+data_clean$Position <- as.numeric(as.factor(data_clean$Position))
+data_clean$Tenure <- as.numeric(as.factor(data_clean$Tenure))
+data_clean$Gender <- as.numeric(as.factor(data_clean$Gender))
+data_clean$Salary <- as.numeric(gsub("[\\$,]", "", data_clean$Salary))
+
+sapply(data_clean, class) 
+```
+
+Afterwards, we just simply had to run the function cor(), to discover how each column was related to each other to. We want to check if there are any highly correlated variables and remove them so as to not skew our KNN. We used a threshold of 0.7 to determine if something was too highly correlated.
+```{r}
+# Before we run kNN, sometimes it's good to check to make sure that our variables are not highly correlated. Use the cor() function on data_clean, label it 'correlations', and view the data, because kNN doesn't work well in high dimensions. 
+correlations <- cor(data_clean)
+```
+
+None of the variable are too highly correlated so we will leave these all in. We will note that Tenure and Salary has a correlation of 0.6 so we will keep an eye out for it. 
+
+The good thing we can see here though is that Gender & Salary only have a correlation of 0.15 which is low and indicated that there isn't a glass ceiling we should be worried about if we are looking only at gender. However, there are more things that determine if there is indeed a glass ceiling-- specifically if these employees we are comparing are indeed doing "the same job".
+
+## Generate Training and Testing Sets
+
+```{r echo=FALSE, include = FALSE, message = FALSE}
+# Use the index to generate a train and test sets, then check the row counts to be safe. 
+# Check the composition of labels in the data set. 
+
+# Let's split the data into a training and a test set.
+# Sample 80% of our know data as training and 20% as test.
+set.seed(1982)
+train_rows <- sample(1:nrow(data_clean),
+                              round(0.8 * nrow(data_clean), 0),
+                              replace = FALSE)#<- don't replace the numbers
+
+
+train <- data_clean[train_rows, ] #<- select the rows identified
+test <- data_clean[-train_rows, ]  #<- select the rows that weren't identified 
+```
+
+### Data Sets {.tabset}
+
+#### Training Data
+```{r }
+head(train)
+```
+
+#### Testing Data
+```{r }
+head(test)
+```
+
+## Choosing the Best K
+```{r echo=FALSE, include = FALSE, message = FALSE}
+# Run the "chooseK" function to find the perfect K, while using sapply() function on chooseK() to test k from 1 to 21 (only selecting the odd numbers)
+
+chooseK = function(k, train_set, val_set, train_class, val_class){
+  
+  # Build knn with k neighbors considered.
+  set.seed(1)
+  class_knn = knn(train = train_set,    #<- training set cases
+                  test = val_set,       #<- test set cases
+                  cl = train_class,     #<- category for classification
+                  k = k,                #<- number of neighbors considered
+                  use.all = TRUE)       #<- control ties between class assignments#   If true, all distances equal to the kth largest are included
+  conf_mat = table(class_knn, val_class)
+  
+  # Calculate the accuracy#could change this to Sensitivity 
+  accu = sum(conf_mat[row(conf_mat) == col(conf_mat)]) / sum(conf_mat)                         
+  cbind(k = k, accuracy = accu)
+}
+
+knn_diff_k_com <- sapply(seq(1, 21, by = 2),  #<- set k to be odd number from 1 to 21
+                         function(x) chooseK(x, 
+                                             train_set = train[labels],
+                                             val_set = test[labels],
+                                             train_class = train[, "Salary"],
+                                             val_class = test[, "Salary"]))
 ```
