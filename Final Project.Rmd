@@ -178,10 +178,10 @@ chooseK = function(k, train_set, val_set, train_class, val_class){
 
 knn_diff_k_com <- sapply(seq(1, 21, by = 2),  #<- set k to be odd number from 1 to 21
                          function(x) chooseK(x, 
-                                             train_set = train[labels],
-                                             val_set = test[labels],
-                                             train_class = train[, "Salary"],
-                                             val_class = test[, "Salary"]))
+                                             train_set = train_knn[labels],
+                                             val_set = test_knn[labels],
+                                             train_class = train_knn[, "Salary"],
+                                             val_class = test_knn[, "Salary"]))
 # Create a dataframe so we can visualize the difference in accuracy based on K, convert the matrix to a dataframe
 trans_knn_diff_k_com<-as.data.frame(t(as.matrix(knn_diff_k_com)))
 
@@ -218,7 +218,7 @@ sapply(data_tree, class)
 We will start off our decision tree by splitting the data into a training and a testing set
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
 # Split your data into test and train using the caret
-x <- createDataPartition(data_tree$GenderNumeric,times=1,p = 0.8,list=FALSE)
+x <- createDataPartition(data_tree$Gender,times=1,p = 0.8,list=FALSE)
 training_tree <- data_tree[x, -5]
 testing_tree <- data_tree[-x, -5]
 ```
@@ -226,13 +226,13 @@ testing_tree <- data_tree[-x, -5]
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
 data_long = data_tree %>% gather(Var, #<- list of predictor variables
                                 Value,#<- the values of those predictor variables
-                                -GenderNumeric) 
+                                -Gender) 
 data_long_form = ddply(data_long, 
                             .(Var, Value),#<- group by Var and Value, "." 
                             #allows us to call the variables without quoting
                             summarize,  
-                            prob_Gender = mean(GenderNumeric), #<- probability of being Parent
-                            prob_not_Gender = 1 - mean(GenderNumeric)) #<- probability of not being Parent
+                            prob_Gender = mean(Gender), #<- probability of being Parent
+                            prob_not_Gender = 1 - mean(Gender)) #<- probability of not being Parent
 ```
 
 ### Building the Model
@@ -252,9 +252,13 @@ data_gini = rpart(Gender~.,  #<- formula, response variable ~ predictors
 
 ### Decision Tree{.tabset}
 #### Visually 
+
+First, we can take a look to see the order of importance of the employee's other factors that we can use to guess gender with.
 ```{r, echo=FALSE}
 rpart.plot(data_gini, type =5, extra = 101)
 ```
+
+Most important is the department that the employee is.
 
 #### Variable Importance
 
