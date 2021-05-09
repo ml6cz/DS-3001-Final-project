@@ -1,0 +1,188 @@
+---
+title: "Final Project"
+subtitle: "Predicting Gender" 
+author: "Megan Lin, James Powell, Eva Mustafic"
+date: "5/5/2021"
+output: 
+  html_document:
+    theme: spacelab
+    toc: true
+    toc_float : true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, message = FALSE)
+library(class)
+library(caret)
+library(e1071) 
+library(tidytext)
+library(dplyr)
+library(readr)
+library(knitr)
+library(ggplot2)
+library(tidyverse)
+library(C50)
+library(mlbench)
+library(rattle)
+library(rpart.plot)
+library(rio)
+library(plyr)
+library(dplyr)
+library(tidyverse)
+library(rpart)
+library(psych)
+library(pROC)
+```
+
+
+## Question of Interest
+
+Text here
+
+
+
+
+
+## Data 
+
+Text here 
+
+
+
+
+### Reading in the Data
+
+The data has previously been merged and cleaned using Python, but we are going to make sure all of the rows with incomplete data are filtered out. Specifically, we will be filtering out employees with a gender the Python program was unable to find in any existing gender-name dictionaries or was deemed to be a gender-neutral name like Alex.
+
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+
+data <- read.csv("SEAS_cleandata.csv")[-63]
+data <- subset(data, Gender %in% c("F", "M"))
+
+levels(data$Gender)<- c(NA, 0,1)
+data$Gender <- as.numeric(as.character(data$Gender))
+vars <- c('Department', 'Position', 'Tenure','Gender', 'Salary')
+data_clean <- data[,(names(data) %in% vars)]
+data_clean$Salary <- as.numeric(gsub("[\\$,]", "", data_clean$Salary))
+
+sapply(data_clean, class) 
+```
+
+```{r}
+kable(head(data))
+```
+
+
+## Model
+
+ Text here
+
+
+
+
+### Splitting
+Next, we split the data into a training and a testing set
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+# Split your data into test and train using the caret
+x <- createDataPartition(data_clean$Gender,times=1,p = 0.8,list=FALSE)
+training <- data_clean[x,-3]
+testing <- data_clean[-x,-3]
+```
+
+### Baserate
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+# Ok now determine the baserate for the classifier, what does this number mean.  
+#For the multi-class this will be the individual percentages for each class. 
+
+data_long = data_clean %>% gather(Var, #<- list of predictor variables
+                                Value,#<- the values of those predictor variables
+                                -Gender) 
+data_long_form = ddply(data_long, 
+                            .(Var, Value),#<- group by Var and Value, "." 
+                            #allows us to call the variables without quoting
+                            summarize,  
+                            prob_Gender = mean(Gender), #<- probability of being Parent
+                            prob_not_Gender = 1 - mean(Gender)) #<- probability of not being Parent
+```
+
+### Building the Model
+
+We build our model using the default setting and by using the rpart function. PR.Status is used as the "formula" aka our response variable. We utilize our previouslt split training dataset and set a cp of 0.01 as it is our default.
+
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+set.seed(2702)
+data_gini = rpart(Gender~.,  #<- formula, response variable ~ predictors
+                           #   "." means "use all other variables in data"
+                            method = "class",#<- specify method, use "class" for tree
+                            parms = list(split = "gini"),#<- method for choosing tree split
+                            data = training,#<- data used
+                            control = rpart.control(cp=.01))
+```
+
+
+### Decision Tree{.tabset}
+#### Visually 
+```{r, echo=FALSE}
+rpart.plot(data_gini, type =4, extra = 101)
+```
+
+#### Variable Importance
+
+```{r, echo=FALSE}
+kable(data_gini$variable.importance) 
+```
+
+
+
+### CP Chart {.tabset}
+#### Plot 
+```{r, echo=FALSE}
+plotcp(data_gini)
+```
+
+#### Table
+```{r, echo=FALSE}
+cptable_ex <- as_tibble(data_gini$cptable)
+kable(cptable_ex)
+```
+Next, we produce a "elbow chart" for various cp values and their associated relative errors. The dashed line represents the highest cross-validated error minus the minimum cross-validated error, plus the standard deviation of the error at that tree. A reasonable choice of cp for pruning is  the leftmost value because this is where the mean is less than the horizontal line. 
+
+The optimal number of splits is 3 as shown in the cptable_ex because this is where the chart first dips below the mean line. Any more splitting increases the x-val relative error. Furthermore, we can also see in the cptable that this has a low relative error, okay xerror, and a decent xstd
+
+### Prediction
+
+Next, we use the predict function to predict the target variable.
+```{r, echo=FALSE}
+tree_predict = predict(data_gini,testing, type= "class")
+```
+
+
+
+### Confusion Matrix {.tabset}
+#### Hit and Detection Rate
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+confusionMatrix(as.factor(tree_predict), as.factor(testing$Gender), positive = "1", dnn=c("Prediction", "Actual"), mode = "sens_spec")
+```
+
+#### Best Metrics
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+par_conf_matrix<-confusionMatrix(as.factor(tree_predict), as.factor(testing$Gender), positive = "1", dnn=c("Prediction", "Actual"), mode = "sens_spec")
+```
+
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+par_error_rate = (par_conf_matrix$table[1,2]+par_conf_matrix$table[2,1]) / (par_conf_matrix$table[1,2]+par_conf_matrix$table[2,1]+par_conf_matrix$table[1,1]+par_conf_matrix$table[2,2])
+
+par_error_rate
+```
+
+
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+true_pos_rate = par_conf_matrix$table[2,2]/(par_conf_matrix$table[1,2]+par_conf_matrix$table[2,1]+par_conf_matrix$table[1,1]+par_conf_matrix$table[2,2])
+true_pos_rate 
+```
+
+
+## Conclusion
+
+
+
