@@ -1,6 +1,6 @@
 ---
 title: "Final Project"
-subtitle: "Predicting Gender" 
+subtitle: "UVA SEAS Salary and Gender" 
 author: "Megan Lin, James Powell, Eva Mustafic"
 date: "5/5/2021"
 output: 
@@ -37,8 +37,15 @@ library(pROC)
 
 ## Question of Interest
 
-Text here
+For our analysis we were interested to see if there was a difference between male and female when it comes to salaries at UVA. In order to explore that, we started of with a question:
 
+1. Is gender a top determining factor within the top N% of faculty at UVA?
+
+For that purposes we decide to use KNN model and explore this question further. But as we will explain later, we did not have many answers to that question, so we were determined to change it. Or follow up question was:
+
+2. Can we predict the gender based on salary (as well as other variables)?
+
+For that purposes we decided to use Decision Tree model and as we will explain later, had more success in explaining what role does gender play at UVA faculty positions. 
 
 
 
@@ -202,15 +209,17 @@ To filter out the vars, we create a list of the vars names and saved the dataset
 
 Gender: Male is 0, Female is 1
 ```{r echo=FALSE, message = FALSE}
-# We drop all columns that do not contain relevant data
-vars <- c('Department', 'Position', 'Tenure', 'Gender', 'Salary')
-data_tree <- data[,(names(data) %in% vars)]
+data <- read.csv("SEAS_cleandata.csv")[-63]
+data <- subset(data, Gender %in% c("F", "M"))
 
-#levels(data_tree$Gender)<- c(0,1)
-#data$Gender <- as.numeric(as.character(data$Gender))
-data_tree$Gender[data_tree$Gender == "M"] <- 0
-data_tree$Gender[data_tree$Gender == "F"] <- 1
-sapply(data_tree, class) 
+data$Gender <- as.factor(data$Gender)
+levels(data$Gender)<- c( 0,1)
+data$Gender <- as.numeric(as.character(data$Gender))
+vars <- c('Department', 'Position', 'Tenure','Gender', 'Salary')
+data_tree <- data[,(names(data) %in% vars)]
+data_tree$Salary <- as.numeric(gsub("[\\$,]", "", data_tree $Salary))
+
+sapply(data_clean, class) 
 ```
 
 ### Splitting
@@ -219,8 +228,8 @@ We will start off our decision tree by splitting the data into a training and a 
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
 # Split your data into test and train using the caret
 x <- createDataPartition(data_tree$Gender,times=1,p = 0.8,list=FALSE)
-training_tree <- data_tree[x, -5]
-testing_tree <- data_tree[-x, -5]
+training_tree <- data_tree[x, -3]
+testing_tree <- data_tree[-x, -3]
 ```
 
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
@@ -287,7 +296,7 @@ The optimal number of splits is 3 as shown in the cptable_ex because this is whe
 
 Next, we use the predict function to predict the target variable.
 ```{r, echo=FALSE}
-tree_predict = predict(data_gini,testing, type= "class")
+tree_predict = predict(data_gini,testing_tree, type= "class")
 ```
 
 
@@ -295,12 +304,12 @@ tree_predict = predict(data_gini,testing, type= "class")
 ### Confusion Matrix {.tabset}
 #### Hit and Detection Rate
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
-confusionMatrix(as.factor(tree_predict), as.factor(testing$Gender), positive = "1", dnn=c("Prediction", "Actual"), mode = "sens_spec")
+confusionMatrix(as.factor(tree_predict), as.factor(testing_tree$Gender), positive = "1", dnn=c("Prediction", "Actual"), mode = "sens_spec")
 ```
 
 #### Best Metrics
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
-par_conf_matrix<-confusionMatrix(as.factor(tree_predict), as.factor(testing$Gender), positive = "1", dnn=c("Prediction", "Actual"), mode = "sens_spec")
+par_conf_matrix<-confusionMatrix(as.factor(tree_predict), as.factor(testing_tree$Gender), positive = "1", dnn=c("Prediction", "Actual"), mode = "sens_spec")
 ```
 
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
