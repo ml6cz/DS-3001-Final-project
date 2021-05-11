@@ -47,9 +47,6 @@ For that purposes we decide to use KNN model and explore this question further. 
 
 For that purposes we decided to use Decision Tree model and as we will explain later, had more success in explaining what role does gender play at UVA faculty positions. 
 
-
-
-
 ## Data 
 
 The data we used to do our initial background research was the {r} [Cavalier Daily's 2020 Faculty Salaries] (https://www.cavalierdaily.com/page/faculty-salary-2020) . The dataset used in our evaluation was a smaller, more specific dataset on UVA's School of Engineering & Applied Science Faculty. However, the information provided within this dataset only included the faculty's name, ID, department, and tenure (Tenured vs. On Track vs. AGF). 
@@ -58,10 +55,7 @@ The Cavalier Daily's dataset was used to merge the salary into the dataset based
 
 Multiple online name and gender dictionaries were used in conjunction with a Python program to determine the gender of the faculty member based on their first name since this information was not readily available. If any of the dictionaries labeled the name as indeterminately female/male (aka a gender-neutral name like Alex), the faculty member was given a ? for gender even if another gender dictionary gave it a determinate female or male labeling. If the gender was not found in any of the datasets, it was given a NA for gender.
 
-In our evaluation, we will only be looking at faculty members who have a determine female or male name.
-
-
-
+In our evaluation, we will only be looking at faculty members who have a determinate female or male name.
 
 ### Reading in the Data
 
@@ -85,7 +79,9 @@ sapply(data_clean, class)
 kable(head(data))
 ```
 
-### Female vs. Male Split
+### Data Walkthrough {.tabset}
+
+#### Gender Distribution
 To determine the split, we had to determine the ratio of female to total, and based on that, we can deduce the percent of male entries, and the percentage of both. To do this we created the function ad_split, which prints the ratio of female to total entries and ran it on the clean salary dataset. The split between female to male is 22 percent to 78 percent within the School of Engineering, respectively.
 
 ```{r echo=FALSE, include = FALSE, message = FALSE}
@@ -100,6 +96,18 @@ ad_split <- function(dat){
 ad_split(data)
 #There is a 22/78 split
 ```
+
+#### Average Difference in Base Pay for Gender
+Between all UVA schools
+```{r echo = FALSE}
+uva_data <- read.csv("All_UVA.csv")
+```
+
+Across departments
+```{r echo = FALSE}
+```
+
+#### Average Salary in SEAS by Factor
 
 ### Cleaning the Data
 
