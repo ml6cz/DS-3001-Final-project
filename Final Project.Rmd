@@ -229,7 +229,6 @@ vars <- c('Department', 'Position', 'Tenure','Gender', 'Salary')
 data_tree <- data[,(names(data) %in% vars)]
 data_tree$Salary <- as.numeric(gsub("[\\$,]", "", data_tree $Salary))
 
-sapply(data_clean, class) 
 ```
 
 ### Splitting
