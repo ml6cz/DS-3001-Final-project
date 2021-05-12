@@ -99,12 +99,30 @@ ad_split(data)
 
 #### Average Difference in Base Pay for Gender
 Between all UVA schools
-```{r echo = FALSE}
+```{r, echo=FALSE}
 uva_data <- read.csv("All_UVA.csv")
+
+#cleaning
+uva_data <-na.omit(uva_data)
+uva_data <- subset(uva_data , Gender %in% c("F", "M"))
+uva_data$Gender <- as.factor(uva_data$Gender)
+uva_data$Base.Pay <- as.numeric(gsub("[\\$,]", "", uva_data$Base.Pay))
+uva_data <-uva_data[,c(4,5,8)] 
+uva_data<-uva_data %>% filter(
+  School == "School of Medicine"  | School == "School of Engineering and Applied Science" | School == "College of Arts and Sciences" | School == "McIntire School of Commerce" | School == "School of Engineering and Applied Science" | School == "Frank Batten School of Leadership and Public Policy" | School == "School of Law" | School == "Darden School of Business" | School == "School of Nursing" | School == "Curry School of Education"
+  )
+```
+
+```{r}
+#plotting
+ggplot(uva_data, aes(School, Base.Pay))+ geom_bar(stat = "identity", aes(fill = Gender), position = "dodge")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 ```
 
 Across departments
 ```{r echo = FALSE}
+
+
 ```
 
 #### Average Salary in SEAS by Factor
