@@ -350,3 +350,9 @@ We can make a pretty good decision tree that can determine gender based on depar
 As previously mentioned, it is good that salary and tenure were not highly ranked in variable importance, but the ideal order would have been department, position, tenure, then salary.
 
 From the first approach, we can see that there are certain departments with high gender disparities which has more to do with employee choice of department rather than UVA being unfair and having a glass ceiling.
+
+
+## Things to Keep in Mind
+Because of how we used gender dictionaries to assign genders to the employees rather than obtaining that data from the employee, there were difficulties determining genders for gender-neutral names or names that did not appear in these dictionaries. While gender-neutral named groups are misrepresented, it is likely that these are well-spread between genders, departments, and tenure.
+
+The more concerning group that is underrepresented are the employees who have names that do not appear in the gender dictionaries we used. These are more likely to be foreign employees since the gender dictionaries we used were written in English. Thus, it is likely that departments that have larger groups of foreign employees like the computer science department are misrepresented in our analysis.
