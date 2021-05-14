@@ -147,7 +147,7 @@ sapply(data_clean, class)
 
 ## Approach #1: KNN
 
-Before entering this process, it is important to note that the KNN approach was the first method we wanted to use to attempt a ML model. However, it does not work for this data even if we are trying to predict the salary of the professors because . 
+Before entering this process, it is important to note that the KNN approach was the first method we wanted to use to attempt a ML model. However, it does not work for this data even if we are trying to predict the salary of the professors becasue there are simply not enough scalar variables to use a KNN model. Everything in this dataset is either a factor or the salary, so a KNN model would not be feasable at all. 
 
 ### Question #1: Predicting Salary
 We just simply had to run the function cor(), to discover how each column was related to each other to. We want to check if there are any highly correlated variables and remove them so as to not skew our KNN. We used a threshold of 0.7 to determine if something was too highly correlated.
