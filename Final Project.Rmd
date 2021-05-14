@@ -255,8 +255,8 @@ We will start off our decision tree by splitting the data into a training and a 
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
 # Split your data into test and train using the caret
 x <- createDataPartition(data_tree$Gender,times=1,p = 0.8,list=FALSE)
-training_tree <- data_tree[x, -3]
-testing_tree <- data_tree[-x, -3]
+training_tree <- data_tree[x,]
+testing_tree <- data_tree[-x,]
 ```
 
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
@@ -273,7 +273,7 @@ data_long_form = ddply(data_long,
 
 ### Building the Model
 
-We build our model using the default setting and by using the rpart function. PR.Status is used as the "formula" aka our response variable. We utilize our previously split training dataset and set a cp of 0.01 as it is our default.
+We build our model using the default setting and by using the rpart function. Gender is used as the "formula" aka our response variable. We utilize our previously split training dataset and set a cp of 0.01 as it is our default.
 
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
 set.seed(2702)
@@ -294,20 +294,22 @@ First, we can take a look to see the order of importance of the employee's other
 rpart.plot(data_gini, type =5, extra = 101)
 ```
 
-Most important is the department that the employee is. If the employee is a member of the Computer Science or Biomedial, Chemical, Computer, Systems, or Mechanical Engineering department, the decision tree will guess that they are a female. From the testing data, we see that 78% of the employees in these departments are female.
+Most important is the department that the employee is. 
 
-If the employee is not in these departments, then if their salary is less than 77,000 they are labeled as a male by the decision tree. Otherwise if their salary is above 77,000 then they are labeled as a female by the decision tree.
+If the employee is a member of the Computer Science or Biomedial, Chemical, Computer, Systems, Mechanical Engineering, or Materials Science department, the decision tree will then look at their position. If they are an Assistant Professor, then we will look at their department and if they are Systems Eng, Mechanical Eng, or Materials Science, then they are determined to be male.
+
+Otherwise, we look at their salary, If it is above 135,000 then they are determined to be male, otherwise they are female.
+
+If the employee is in the E+S (APMA) Department, the only important factor next to look at is their salary level. If it is below 77,000, then they are a male, if it above then they are female.
 
 #### Variable Importance
 
 ```{r, echo=FALSE}
 kable(data_gini$variable.importance) 
 ```
-In order of decreasing importance, department, salary, then position are the most important factors within the School of Engineering that can be used to accurately determine the faculty member's gender.
+In order of decreasing importance, department, salary, position, then tenure are the most important factors within the School of Engineering that can be used to accurately determine the faculty member's gender.
 
 Ideally, the order would have been department, position, tenure, then salary. Department would be at the top of the list because this is for the most part, employee-chosen. Position would be next because this would also be driven by drive by the employee member and their background coming into UVA. Third is tenure which is similar to position, but has less to do with the employee's resume coming into UVA and moreso how UVA treats the employee throughout their time at UVA. If this factor was ranked higher, it would indicate that there is likely bias in UVA's own process at choosing professors for tenure. However, there is still a level of employee drive and initiative to even apply for being on track for tenure vs. staying as an AGF. Last is salary because salary is more reactive to the employee's current responsibilities and role at UVA. Tenure is similarly important, but can take 5-20 years for the university to make a binary choice versus the university reevaluating the professor's salary each year.
-
-### Prediction
 
 Next, we use the predict function to predict the target variable.
 ```{r, echo=FALSE}
@@ -323,7 +325,7 @@ confusionMatrix(as.factor(tree_predict), as.factor(testing_tree$Gender), positiv
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
 par_conf_matrix<-confusionMatrix(as.factor(tree_predict), as.factor(testing_tree$Gender), positive = "1", dnn=c("Prediction", "Actual"), mode = "sens_spec")
 ```
-The detection rate is found to be 66.7% with a prevalence of 73.8% Our model currently has an accuracy of 69.1%.
+The detection rate is found to be 66.7% with a prevalence of 90.5% Our model currently has an accuracy of 69.1%.
 
 The hit rate can be derived from the confusion matrix by taking the number of true positives (28) over total actual positive cases (28+ a missing 3 = 31) for a hit rate of 90.3%.
 
@@ -332,7 +334,7 @@ par_error_rate = (par_conf_matrix$table[1,2]+par_conf_matrix$table[2,1]) / (par_
 
 par_error_rate
 ```
-The Hit Rate/ True Error Rate is 30.1%
+The Hit Rate/ True Error Rate is 31.0%
 
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
 true_pos_rate = par_conf_matrix$table[2,2]/(par_conf_matrix$table[1,2]+par_conf_matrix$table[2,1]+par_conf_matrix$table[1,1]+par_conf_matrix$table[2,2])
