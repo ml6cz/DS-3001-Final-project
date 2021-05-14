@@ -123,15 +123,21 @@ ggplot(uva_data, aes(School, Base.Pay))+ geom_bar(stat = "identity", aes(fill = 
 ```
 
 #### Average Difference in Salary for Gender Across All SEAS Departments
+![Graph of Average Salary in SEAS by Factor](/cloud/project/All Factors.png)
+
+
+#### Average Salary in SEAS by Factor
 ```{r echo = FALSE}
-data_diff <-data
-data_diff$Salary <- as.numeric(gsub("[\\$,]", "", data_diff$Salary))
-ggplot(data_diff, aes(fill=Gender, y=Salary, x=Department)) + 
+data_gender <- data[]
+data_factors <-data
+data_factors$Salary <- as.numeric(gsub("[\\$,]", "", data_factors$Salary))
+
+
+ggplot(data_factors, aes(fill=Gender, y=Salary, x=Department)) + 
     geom_bar(position="dodge", stat="identity")
 
 ```
 
-#### Average Salary in SEAS by Factor
 
 ### Cleaning the Data
 
@@ -241,18 +247,16 @@ We're going to switch over to using a decision tree to see if we can accurately 
 
 To filter out the vars, we create a list of the vars names and saved the dataset over itself without the columns in the vars variable. 
 
-Gender: Male is 0, Female is 1
+Gender: Male is 1, Female is 0
 ```{r echo=FALSE, message = FALSE}
-data <- read.csv("SEAS_cleandata.csv")[-63]
-data <- subset(data, Gender %in% c("F", "M"))
-
-data$Gender <- as.factor(data$Gender)
-levels(data$Gender)<- c( 0,1)
-data$Gender <- as.numeric(as.character(data$Gender))
+data_tree<- read.csv("SEAS_cleandata.csv")
 vars <- c('Department', 'Position', 'Tenure','Gender', 'Salary')
-data_tree <- data[,(names(data) %in% vars)]
-data_tree$Salary <- as.numeric(gsub("[\\$,]", "", data_tree $Salary))
-
+data_tree <- data_tree[,(names(data_tree) %in% vars)]
+data_tree <- subset(data_tree , Gender %in% c("F", "M"))
+data_tree$Salary <- as.numeric(gsub("[\\$,]", "", data_tree$Salary))
+data_tree$Gender <- as.factor(data_tree$Gender)
+levels(data_tree$Gender)<- c(0,1)
+data_tree$Gender <- as.numeric(as.character(data_tree$Gender))
 ```
 
 ### Splitting
@@ -302,11 +306,9 @@ rpart.plot(data_gini, type =5, extra = 101)
 
 Most important is the department that the employee is. 
 
-If the employee is a member of the Computer Science or Biomedial, Chemical, Computer, Systems, Mechanical Engineering, or Materials Science department, the decision tree will then look at their position. If they are an Assistant Professor, then we will look at their department and if they are Systems Eng, Mechanical Eng, or Materials Science, then they are determined to be male.
+If they are in E+S (APMA) or MAE, then salary is the secondmost important. If their salary is below 77k, they are assigned by the decision tree to be a female If they are over 77k, they are male
 
-Otherwise, we look at their salary, If it is above 135,000 then they are determined to be male, otherwise they are female.
-
-If the employee is in the E+S (APMA) Department, the only important factor next to look at is their salary level. If it is below 77,000, then they are a male, if it above then they are female.
+If they are in any other department, they are determined to be male as amongst these departments, there are 113 males to 19 females.
 
 #### Variable Importance
 
@@ -331,7 +333,7 @@ confusionMatrix(as.factor(tree_predict), as.factor(testing_tree$Gender), positiv
 ```{r, echo=FALSE, include=FALSE, warning=FALSE}
 par_conf_matrix<-confusionMatrix(as.factor(tree_predict), as.factor(testing_tree$Gender), positive = "1", dnn=c("Prediction", "Actual"), mode = "sens_spec")
 ```
-The detection rate is found to be 66.7% with a prevalence of 90.5% Our model currently has an accuracy of 69.1%.
+The detection rate is found to be 66.7% with a prevalence of 73.8% Our model currently has an accuracy of 69.1%.
 
 The hit rate can be derived from the confusion matrix by taking the number of true positives (28) over total actual positive cases (28+ a missing 3 = 31) for a hit rate of 90.3%.
 
