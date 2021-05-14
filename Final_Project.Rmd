@@ -51,6 +51,12 @@ We decided to use a Decision Tree to explore which of these variables would be m
 
 We decided to use a Decision Tree to explore which of these variables would be most important in determining tenure 
 
+3. Can we predict the tenure based on salary (as well as other variables)?
+
+For the same purposes as question two we decided to use a Decision Tree model to explain what role tenure plays in UVA faculty positions.
+
+
+
 ## Data 
 
 The data we used to do our initial background research was the {r} [Cavalier Daily's 2020 Faculty Salaries] (https://www.cavalierdaily.com/page/faculty-salary-2020) . The dataset used in our evaluation was a smaller, more specific dataset on UVA's School of Engineering & Applied Science Faculty. However, the information provided within this dataset only included the faculty's name, ID, department, and tenure (Tenured vs. On Track vs. AGF). 
@@ -80,7 +86,7 @@ sapply(data_clean, class)
 ```
 
 ```{r}
-kable(head(data))
+head(data)
 ```
 
 ### Data Walkthrough {.tabset}
@@ -116,12 +122,7 @@ uva_data<-uva_data %>% filter(
   )
 ```
 
-```{r}
-#plotting
-ggplot(uva_data, aes(School, Base.Pay))+ geom_bar(stat = "identity", aes(fill = Gender), position = "dodge")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-```
-
+Across departments
 #### Average Difference in Salary for Gender Across All SEAS Departments
 ![Graph of Average Salary in SEAS by Factor](/cloud/project/All Factors.png)
 
@@ -138,6 +139,11 @@ ggplot(data_factors, aes(fill=Gender, y=Salary, x=Department)) +
 
 ```
 
+<<<<<<< HEAD
+=======
+
+#### Average Salary in SEAS by Factor
+>>>>>>> 9a9072780172829099ebce57e71b12c136d02a74
 
 ### Cleaning the Data
 
@@ -157,10 +163,10 @@ sapply(data_clean, class)
 
 ## Approach #1: KNN
 
-James if you can explain how this would have worked here even though its not going to work-- worthwhile to give more info since we already did the work for it
+Before entering this process, it is important to note that the KNN approach was the first method we wanted to use to attempt a ML model. However, it does not work for this data even if we are trying to predict the salary of the professors becasue there are simply not enough scalar variables to use a KNN model. Everything in this dataset is either a factor or the salary, so a KNN model would not be feasable at all. 
 
-
-Afterwards, we just simply had to run the function cor(), to discover how each column was related to each other to. We want to check if there are any highly correlated variables and remove them so as to not skew our KNN. We used a threshold of 0.7 to determine if something was too highly correlated.
+### Question #1: Predicting Salary
+We just simply had to run the function cor(), to discover how each column was related to each other to. We want to check if there are any highly correlated variables and remove them so as to not skew our KNN. We used a threshold of 0.7 to determine if something was too highly correlated.
 
 ### Correlation Between Variables
 ```{r}
@@ -194,12 +200,12 @@ test_knn <- data_clean[-train_rows, ]  #<- select the rows that weren't identifi
 
 #### Training Data
 ```{r }
-kable(head(train_knn))
+head(train_knn)
 ```
 
 #### Testing Data
 ```{r }
-kable(head(test_knn))
+head(test_knn)
 ```
 
 ### Choosing the Best K
@@ -241,7 +247,11 @@ Unfortunately, we see that there are no good number of splits if we use KNN so i
 
 ## Approach #2: Decision Trees
 
-We're going to switch over to using a decision tree to see if we can accurately predict an employee's salary based on a combination of 1-3 factors from their gender, department, and tenure.
+### Question #2:Predicting Gender
+
+We're going to switch over to using a decision tree to see if we can accurately predict an employee's gender based on a combination of 1-3 factors from their salary, department, and tenure. 
+
+From the first approach, we can see that there are certain departments with high gender disparities which has more to do with employee choice of department rather than UVA being unfair and having a glass ceiling.
 
 ### Cleaning the Data
 
@@ -249,7 +259,17 @@ To filter out the vars, we create a list of the vars names and saved the dataset
 
 Gender: Male is 1, Female is 0
 ```{r echo=FALSE, message = FALSE}
+<<<<<<< HEAD
 data_tree<- read.csv("SEAS_cleandata.csv")
+=======
+data <- read.csv("SEAS_cleandata.csv")[-63]
+data <- subset(data, Gender %in% c("F", "M"))
+
+data$Gender <- as.factor(data$Gender)
+levels(data$Gender)<- c( 0,1)
+data$Gender <- as.numeric(as.character(data$Gender))
+data$Tenure <- as.factor(data$Tenure)
+>>>>>>> 9a9072780172829099ebce57e71b12c136d02a74
 vars <- c('Department', 'Position', 'Tenure','Gender', 'Salary')
 data_tree <- data_tree[,(names(data_tree) %in% vars)]
 data_tree <- subset(data_tree , Gender %in% c("F", "M"))
@@ -258,6 +278,14 @@ data_tree$Gender <- as.factor(data_tree$Gender)
 levels(data_tree$Gender)<- c(0,1)
 data_tree$Gender <- as.numeric(as.character(data_tree$Gender))
 ```
+
+
+
+
+## Things to Keep in Mind
+Because of how we used gender dictionaries to assign genders to the employees rather than obtaining that data from the employee, there were difficulties determining genders for gender-neutral names or names that did not appear in these dictionaries. While gender-neutral named groups are misrepresented, it is likely that these are well-spread between genders, departments, and tenure.
+
+The more concerning group that is underrepresented are the employees who have names that do not appear in the gender dictionaries we used. These are more likely to be foreign employees since the gender dictionaries we used were written in English. Thus, it is likely that departments that have larger groups of foreign employees like the computer science department are misrepresented in our analysis.
 
 ### Splitting
 
@@ -313,7 +341,7 @@ If they are in any other department, they are determined to be male as amongst t
 #### Variable Importance
 
 ```{r, echo=FALSE}
-kable(data_gini$variable.importance) 
+head(data_gini$variable.importance) 
 ```
 In order of decreasing importance, department, salary, position, then tenure are the most important factors within the School of Engineering that can be used to accurately determine the faculty member's gender.
 
@@ -352,15 +380,94 @@ The true positive rate, also shown as our detection rate is 66.7%
 
 The true positive rate could be improved upon as the ideal would create a confusion matrix with a value of 0 in the spot (1,2) also meaning a hit rate of 100%. Overall, this is a pretty good rate for our decision tree. The only concern would be a medium level of false positives (10 cases out of 42)
 
+### Question #3: Predicting Tenure
+
+We are going to use a similar decision tree to see if we can accurately predict an employee's tenure based on a combination of 1-3 factors from their salary, department, and tenure. 
+
+### Splitting
+
+We will start off our decision tree by splitting the data into a training and a testing set as we did for the previous tree
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+# Split your data into test and train using the caret
+set.seed(2702)
+y <- createDataPartition(data_tree$Gender,times=1,p = 0.8,list=FALSE)
+training_tree2 <- data_tree[y,]
+testing_tree2 <- data_tree[-y,]
+```
+
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+data_long2 = data_tree %>% gather(Var, #<- list of predictor variables
+                                Value,#<- the values of those predictor variables
+                                -Tenure) 
+data_long_form2 = ddply(data_long2, 
+                            .(Var, Value),#<- group by Var and Value, "." 
+                            #allows us to call the variables without quoting
+                            summarize,  
+                            prob_AGF = mean(as.numeric(ifelse(data$Tenure == "AGF", 1,0))),
+                            prob_OT = mean(as.numeric(ifelse(data$Tenure == "On Track", 1,0))),
+                            prob_T = mean(as.numeric(ifelse(data$Tenure == "Tenured", 1,0)))) #<- probability of not being Parent
+```
+
+### Building the Model
+
+We build our model using the default setting and by using the rpart function. Instead of gender, this time Tenure is used as the "formula" aka our response variable. We utilize our previously split training dataset and set a cp of 0.01 as it is our default.
+
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+
+data_gini2 = rpart(Tenure~.,  #<- formula, response variable ~ predictors
+                           #   "." means "use all other variables in data"
+                            method = "class",#<- specify method, use "class" for tree
+                            parms = list(split = "gini"),#<- method for choosing tree split
+                            data = training_tree2,#<- data used
+                            control = rpart.control(cp=.01))
+```
+
+
+### Decision Tree{.tabset}
+#### Visually 
+
+First, we can take a look to see the order of importance of the employee's other factors that we can use to guess tenure with.
+```{r, echo=FALSE}
+rpart.plot(data_gini2, type =5, extra = 101)
+```
+
+The most influential variable in our decision tree is the position that a given faculty member occupies. If they are an assistant professor, research associate, associate professor, or a professor, then the model immediately classifies them as tenured without consideration of another variable.In the case that a faculty member is not filling one of the aforementioned positions, the next most important classifier is salary. If said faculty member's salary is greater than 125k, then that suggests that they are on track to tenure, otherwise they are AGF.
+
+
+#### Variable Importance
+
+```{r, echo=FALSE}
+head(data_gini2$variable.importance) 
+```
+In order of decreasing importance, position, salary, department, and then gender are the most important factors within the School of Engineering that can be used to accurately determine the faculty member's tenure. This is the ideal order as it pertains to gender because it is not only last in ranking of importance, but it also is so unimportant that the decision tree doesn't make any of its decisions on it at all.
+
+To be honest, my perfect order 
+
+
+### Prediction
+
+Next, we use the predict function to predict the target variable in the testing set.
+```{r, echo=FALSE}
+tree_predict2 = predict(data_gini2,testing_tree, type= "class")
+```
+
+### Confusion Matrix {.tabset}
+#### Hit and Detection Rate
+
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+par_conf_matrix2<-confusionMatrix(as.factor(tree_predict2), as.factor(testing_tree2$Tenure), dnn=c("Prediction", "Actual"), mode = "sens_spec")
+par_conf_matrix2
+```
+the detection rates, prevalence, and sensitivity for this model are all pretty abysmal for all three categories with the highest of all of these being the sensitivity of tenure at .77, and the overall accuracy for this model is under 50%.
+
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+par_error_rate2 = 1-((par_conf_matrix2$table[1,1]+par_conf_matrix2$table[2,2]+par_conf_matrix2$table[3,3])/ nrow(testing_tree2))
+
+par_error_rate2
+```
+The Hit Rate/ True Error Rate is 52.4%
+
 ## Conclusion
-We can make a pretty good decision tree that can determine gender based on department, tenure, salary, and position. This model has a hit rate of 90% which is fairly high.
-
-As previously mentioned, it is good that salary and tenure were not highly ranked in variable importance, but the ideal order would have been department, position, tenure, then salary.
-
-From the first approach, we can see that there are certain departments with high gender disparities which has more to do with employee choice of department rather than UVA being unfair and having a glass ceiling.
+While this decision tree can guess the tenure status of a professor better than random, however, this is by no means a good model. Regardless of the validity of the model, we can still infer some result to our question for the variable importance and how this model was formed. Gender has very little to do with tenure status. When I changed the seed, multiple times, there was not a single model that used the gender category to predict the tenure status of the faculty. Kudos to UVA for that (otherwise there would be a problem).
 
 
-## Things to Keep in Mind
-Because of how we used gender dictionaries to assign genders to the employees rather than obtaining that data from the employee, there were difficulties determining genders for gender-neutral names or names that did not appear in these dictionaries. While gender-neutral named groups are misrepresented, it is likely that these are well-spread between genders, departments, and tenure.
-
-The more concerning group that is underrepresented are the employees who have names that do not appear in the gender dictionaries we used. These are more likely to be foreign employees since the gender dictionaries we used were written in English. Thus, it is likely that departments that have larger groups of foreign employees like the computer science department are misrepresented in our analysis.
