@@ -37,15 +37,19 @@ library(pROC)
 
 ## Question of Interest
 
-For our analysis we were interested to see if there was a difference between male and female when it comes to salaries at UVA. In order to explore that, we started of with a question:
+For this project, we were interested to see if there was a Glass Ceiling at UVA-- specifically if there was a significant difference between male and female  salaries at UVA. In order to explore that, we explored the questions:
 
 1. Is gender a top determining factor within the top N% of faculty at UVA?
 
-For that purposes we decide to use KNN model and explore this question further. But as we will explain later, we did not have many answers to that question, so we were determined to change it. Or follow up question was:
+We decided to use a KNN model to try and answer this question. However, as we will explain later, we ran into a barrier that made it so we were unable to answer the question using KNN. Instead, we reworded our question as:
 
-2. Can we predict the gender based on salary (as well as other variables)?
+2. Can we predict an employee's gender based on their salary? What about if we add in tenure and/or department?
 
-For that purposes we decided to use Decision Tree model and as we will explain later, had more success in explaining what role does gender play at UVA faculty positions. 
+We decided to use a Decision Tree to explore which of these variables would be most important in determining gender. 
+
+3. Can we predict an employee's tenure based on their gender? What about if we add in department and/or salary?
+
+We decided to use a Decision Tree to explore which of these variables would be most important in determining tenure 
 
 ## Data 
 
@@ -97,8 +101,7 @@ ad_split(data)
 #There is a 22/78 split
 ```
 
-#### Average Difference in Base Pay for Gender
-Between all UVA schools
+#### Average Difference in Base Pay for Gender Between all UVA schools
 ```{r, echo=FALSE}
 uva_data <- read.csv("All_UVA.csv")
 
@@ -119,9 +122,12 @@ ggplot(uva_data, aes(School, Base.Pay))+ geom_bar(stat = "identity", aes(fill = 
 
 ```
 
-Across departments
+#### Average Difference in Salary for Gender Across All SEAS Departments
 ```{r echo = FALSE}
-
+data_diff <-data
+data_diff$Salary <- as.numeric(gsub("[\\$,]", "", data_diff$Salary))
+ggplot(data_diff, aes(fill=Gender, y=Salary, x=Department)) + 
+    geom_bar(position="dodge", stat="identity")
 
 ```
 
